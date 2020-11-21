@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 # open file and read in formatted content to text array
 def process_file(filename) :
@@ -6,18 +7,16 @@ def process_file(filename) :
 	raw_text = file.read()
 	file.close()
 
-	data = []
-	labels = []
+	data = np.empty((0, 9), float)
+	labels = np.array([])
 
 	lines = raw_text.split('\n')
 	for line in lines:
-		words = line.split('\t')
-		for word in words:
-			if word != words[3]:  # don't try convert style string to float!
-				word = float(word)
-			else:
-				labels.insert(1, words.pop(3))  # instead remove style and set as label
-		data.insert(1, words)
+		attributes = np.array(line.split('\t'))
+		labels = np.append(labels, attributes[3]) # index 3 is the style, append to labels
+		attributes = np.delete(attributes, 3) # and then delete it from the data
+		attributes = attributes.astype(np.float) # all other attributes should be floats
+		data = np.append(data, np.array([attributes]), axis=0)
 
 	return data, labels
 
@@ -27,7 +26,7 @@ def array_similarity(array_1, array_2):
 	identical = 0
 	different = 0
 
-	if len(array_1) == len(array_2):
+	if (len(array_1) == len(array_2) and len(array_1) > 0):
 		for x in range(len(array_1)):
 			if array_1[x] == array_2[x]:
 				identical += 1
@@ -62,14 +61,17 @@ def split_data_set(data_array, label_array, percentage_for_training) :
 	return training_data, training_labels, testing_data, testing_labels
 
 class Classifier:
-	def __init__():
+	def __init__(self):
 		### TODO
+		a = 5
 
 	def fit(self, X, y):
 		### TODO
+		a = 5
 
 	def predict(self, X):
 		### TODO
+		return []
 
 if __name__ == '__main__':
 	data, labels = process_file("beer.txt")
