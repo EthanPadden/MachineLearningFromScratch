@@ -45,3 +45,18 @@ def get_candidate_thresholds(data, labels, attr_index):
 
     # Return the candidate list
     return candidate_thresholds
+
+def split_data(data, attr_index, threshold=None):
+    # Create LHS and RHS of dataset
+    new_data_2 = []
+    new_data_1 = []
+
+    if (threshold != None):
+        for row in data:
+            if(row[attr_index] > threshold):
+                new_data_2.append(row)
+            else:
+                new_data_1.append(row)
+    ### TODO: For discrete values
+
+    return np.array(new_data_1), np.array(new_data_2)
