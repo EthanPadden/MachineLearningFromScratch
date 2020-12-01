@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 
-def calculate_entropy(data, labels):
+def calculate_entropy(labels):
     sum = 0.0
     labels_unique = np.unique(labels, axis=0)
     print("Calculating entropy...")
@@ -60,3 +60,30 @@ def split_data(data, attr_index, threshold=None):
     ### TODO: For discrete values
 
     return [np.array(new_data_1), np.array(new_data_2)]
+
+def get_corresponding_labels(dataset, labes_whole_dataset):
+    labels_dataset = []
+    for row in dataset:
+        index = int(row[9])
+        try:
+            labels_dataset.append(labes_whole_dataset[index])
+        except IndexError:
+            pass
+
+    return labels_dataset
+
+def calculate_info_gain(whole_dataset, attr_index, labels):
+    ### TODO: For discrete values
+    ### TODO: Remove hard coded value and iterate over candidate thresholds
+    datasets = split_data(whole_dataset,attr_index, 40)
+
+    entropy_whole_dataset = calculate_entropy(labels)
+
+    sum = 0
+    for dataset in datasets:
+        ratio = len(dataset)/len(whole_dataset)
+        labels = get_corresponding_labels(dataset, labels)
+        entropy_dataset = calculate_entropy(labels)
+        sum += (ratio*entropy_dataset)
+
+    return entropy_whole_dataset - sum
