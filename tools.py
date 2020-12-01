@@ -59,4 +59,4 @@ def split_data(data, attr_index, threshold=None):
                 new_data_1.append(row)
     ### TODO: For discrete values
 
-    return np.array(new_data_1), np.array(new_data_2)
+    return [np.array(new_data_1), np.array(new_data_2)]
