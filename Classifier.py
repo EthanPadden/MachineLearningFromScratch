@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import tools
 
 # open file and read in formatted content to text array
 def process_file(filename) :
@@ -7,7 +8,7 @@ def process_file(filename) :
 	raw_text = file.read()
 	file.close()
 
-	data = np.empty((0, 9), float)
+	data = np.empty((0, 10), float)
 	labels = np.array([])
 
 	lines = raw_text.split('\n')
