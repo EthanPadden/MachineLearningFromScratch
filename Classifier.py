@@ -52,9 +52,14 @@ def split_data_set(data_array, label_array, percentage_for_training) :
 
 	while (i < training_data_length) :
 		chance = (random.randint(1, len(data_array)))
-		if chance < (training_data_length):
-			testing_data.insert(1, training_data.pop(i))
-			testing_labels.insert(1, training_labels.pop(i))
+		if (chance < training_data_length):
+			# put the randomly selected data instance into the testing array
+			testing_data.insert(1, training_data[i])
+			testing_labels.insert(1, training_labels[i])
+
+			# then delete it from the training array
+			np.delete(training_data, i)
+			np.delete(training_labels, i)
 
 			i += 1
 
