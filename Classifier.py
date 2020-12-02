@@ -66,7 +66,7 @@ def split_data_set(data_array, label_array, percentage_for_training) :
 
 	return training_data, training_labels, testing_data, testing_labels
 
-def calculate_entropy(labels):
+def _calculate_entropy(labels):
     sum = 0.0
     labels_unique = np.unique(labels, axis=0)
     print("Calculating entropy...")
@@ -81,7 +81,7 @@ def calculate_entropy(labels):
     return sum
 
 
-def get_candidate_thresholds(data, labels, attr_index):
+def _get_candidate_thresholds(data, labels, attr_index):
     # Make a copy of the data for sorting without affecting the original sort order
     data_for_sorting = data.copy()
 
@@ -110,7 +110,7 @@ def get_candidate_thresholds(data, labels, attr_index):
     # Return the candidate list
     return candidate_thresholds
 
-def split_data_according_to_attribute(data, attr_index, threshold=None):
+def _split_data_according_to_attribute(data, attr_index, threshold=None):
     # Create LHS and RHS of dataset
     new_data_2 = []
     new_data_1 = []
@@ -125,7 +125,7 @@ def split_data_according_to_attribute(data, attr_index, threshold=None):
 
     return [np.array(new_data_1), np.array(new_data_2)]
 
-def get_corresponding_labels(dataset, labes_whole_dataset):
+def _get_corresponding_labels(dataset, labes_whole_dataset):
     labels_dataset = []
     for row in dataset:
         index = int(row[9])
@@ -133,27 +133,27 @@ def get_corresponding_labels(dataset, labes_whole_dataset):
 
     return labels_dataset
 
-def get_best_threshold(data, attr_index, labels):
-    candidate_thresholds = get_candidate_thresholds(data, labels, attr_index)
+def _get_best_threshold(data, attr_index, labels):
+    candidate_thresholds = _get_candidate_thresholds(data, labels, attr_index)
     info_gains = []
     for threshold in candidate_thresholds:
-        info_gain = calculate_info_gain(data, attr_index, labels, threshold)
+        info_gain = _calculate_info_gain(data, attr_index, labels, threshold)
         info_gains.append(info_gain)
     max_info_gain = max(float(sub) for sub in info_gains)
     corresponding_index = info_gains.index(max_info_gain)
     return candidate_thresholds[corresponding_index]
 
-def calculate_info_gain(whole_dataset, attr_index, labels, threshold):
+def _calculate_info_gain(whole_dataset, attr_index, labels, threshold):
     ### TODO: For discrete values
-    datasets = split_data_according_to_attribute(whole_dataset, attr_index, threshold)
+    datasets = _split_data_according_to_attribute(whole_dataset, attr_index, threshold)
 
-    entropy_whole_dataset = calculate_entropy(labels)
+    entropy_whole_dataset = _calculate_entropy(labels)
 
     sum = 0
     for dataset in datasets:
         ratio = len(dataset) / len(whole_dataset)
-        current_dataset_labels = get_corresponding_labels(dataset, labels)
-        entropy_dataset = calculate_entropy(current_dataset_labels)
+        current_dataset_labels = _get_corresponding_labels(dataset, labels)
+        entropy_dataset = _calculate_entropy(current_dataset_labels)
         sum += (ratio * entropy_dataset)
 
     return entropy_whole_dataset - sum
