@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from operator import itemgetter
 
 
 def calculate_entropy(labels):
@@ -53,7 +54,7 @@ def split_data(data, attr_index, threshold=None):
 
     if (threshold != None):
         for row in data:
-            if(row[attr_index] > threshold):
+            if (row[attr_index] > threshold):
                 new_data_2.append(row)
             else:
                 new_data_1.append(row)
@@ -65,25 +66,31 @@ def get_corresponding_labels(dataset, labes_whole_dataset):
     labels_dataset = []
     for row in dataset:
         index = int(row[9])
-        try:
-            labels_dataset.append(labes_whole_dataset[index])
-        except IndexError:
-            pass
+        labels_dataset.append(labes_whole_dataset[index])
 
     return labels_dataset
 
-def calculate_info_gain(whole_dataset, attr_index, labels):
+def get_best_threshold(data, attr_index, labels):
+    candidate_thresholds = get_candidate_thresholds(data, labels, attr_index)
+    info_gains = []
+    for threshold in candidate_thresholds:
+        info_gain = calculate_info_gain(data, attr_index, labels, threshold)
+        info_gains.append(info_gain)
+    max_info_gain = max(float(sub) for sub in info_gains)
+    corresponding_index = info_gains.index(max_info_gain)
+    return candidate_thresholds[corresponding_index]
+
+def calculate_info_gain(whole_dataset, attr_index, labels, threshold):
     ### TODO: For discrete values
-    ### TODO: Remove hard coded value and iterate over candidate thresholds
-    datasets = split_data(whole_dataset,attr_index, 40)
+    datasets = split_data(whole_dataset, attr_index, threshold)
 
     entropy_whole_dataset = calculate_entropy(labels)
 
     sum = 0
     for dataset in datasets:
-        ratio = len(dataset)/len(whole_dataset)
-        labels = get_corresponding_labels(dataset, labels)
-        entropy_dataset = calculate_entropy(labels)
-        sum += (ratio*entropy_dataset)
+        ratio = len(dataset) / len(whole_dataset)
+        current_dataset_labels = get_corresponding_labels(dataset, labels)
+        entropy_dataset = calculate_entropy(current_dataset_labels)
+        sum += (ratio * entropy_dataset)
 
     return entropy_whole_dataset - sum
