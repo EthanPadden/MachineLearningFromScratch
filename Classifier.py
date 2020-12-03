@@ -139,11 +139,11 @@ class Classifier:
 
 		return [np.array(new_data_1), np.array(new_data_2)]
 
-	def _get_corresponding_labels(self, dataset, labes_whole_dataset):
+	def _get_corresponding_labels(self, dataset, labels_whole_dataset):
 		labels_dataset = []
 		for row in dataset:
 			index = int(row[9])
-			labels_dataset.append(labes_whole_dataset[index])
+			labels_dataset.append(labels_whole_dataset[index])
 
 		return labels_dataset
 
