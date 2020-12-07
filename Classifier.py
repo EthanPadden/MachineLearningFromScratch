@@ -12,6 +12,7 @@ def process_file(filename) :
 	labels = np.array([])
 
 	lines = raw_text.split('\n')
+	random.shuffle(lines)
 	for line in lines:
 		attributes = np.array(line.split('\t'))
 		labels = np.append(labels, attributes[3]) # index 3 is the style, append to labels
