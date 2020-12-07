@@ -172,23 +172,21 @@ class Classifier:
 			tree = self.tree_root
 
 		if tree.threshold is not None and tree.attribute is not None:
-			print("ATTRIBUTE:\t:", tree.attribute, "\nTHRESHOLD:\t", tree.threshold)
-
 			if tree.right is not None:
 				self.traverseTree(tree.right)
 
 	def _calculate_entropy(self, labels):
 		sum = 0.0
 		labels_unique = np.unique(labels, axis=0)
-		print("Calculating entropy...")
-		print("Labels:")
-		print(labels_unique)
+		#print("Calculating entropy...")
+		#print("Labels:")
+		#print(labels_unique)
 		for label in labels_unique:
 			label_count = len(labels[labels == label])
 			label_proportion = float(label_count) / float(len(labels))
-			print(label + " proportion = " + str(label_count) + "/" + str(len(labels)) + " = " + str(label_proportion))
+			#print(label + " proportion = " + str(label_count) + "/" + str(len(labels)) + " = " + str(label_proportion))
 			sum += -1 * label_proportion * (math.log(label_proportion, 2))
-		print("Entropy = " + str(sum))
+		#print("Entropy = " + str(sum))
 		return sum
 
 	def _get_candidate_thresholds(self, data, labels, attr_index):
@@ -291,4 +289,4 @@ if __name__ == '__main__':
 
 	total_accuracy /= number_of_runs
 
-	print("Total accuracy of", number_of_runs, "runs:", run_accuracy, "%")
+	print("Total accuracy of", number_of_runs, "runs:", total_accuracy, "%")
