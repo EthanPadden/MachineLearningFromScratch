@@ -16,6 +16,7 @@ def process_file(filename):
 	random.shuffle(lines)  # TODO: may move somewhere else. Rereading file just for shuffling
 	for line in lines:
 		attributes = np.array(line.split('\t'))
+		np.delete(attributes, 7) # an ID column, which we don't went to train our model on
 		labels = np.append(labels, attributes[3])  # index 3 is the style, append to labels
 		attributes = np.delete(attributes, 3)  # and then delete it from the data
 		attributes = attributes.astype(np.float)  # all other attributes should be floats
