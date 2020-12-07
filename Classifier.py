@@ -66,14 +66,24 @@ def split_data_set(data_array, label_array, percentage_for_training) :
 
 	return training_data, training_labels, testing_data, testing_labels
 
+
+# TODO: maybe rename to Node? TreeNode maybe?
+class Tree(object):
+	def __init__(self):
+		self.left = None
+		self.right = None
+
+		self.attribute = None
+		self.threshold = None
+
 class Classifier:
 	def __init__(self):
-		### TODO
-		a = 5
+		self.myTree = None
+		self.already_chosen_attributes = np.empty([0], dtype=int)
 
 	def fit(self, X, y):
-		### TODO
-		a = 5
+		self._build_tree(X, y)
+		self.traverseTree()
 
 	def predict(self, X):
 		### TODO
@@ -81,7 +91,56 @@ class Classifier:
 
 	# private functions:
 
-	def _calculate_entropy(labels):
+	def _build_tree(self, data_copy, labels, tree=None):
+		# Build tree up recursively
+
+		# Initialise the tree
+		if tree is None:
+			tree = Tree()
+			self.myTree = tree # assign this root node to the member variable
+
+		best_gain = 0  # is this the lowest possible info gain? idk
+		a_best = -1
+
+		if len(data_copy.shape) > 1:
+			threshold = None
+
+			for i in range(data_copy.shape[1] - 1): # don't do last element, as it just an id!
+				if np.where(self.already_chosen_attributes == i)[0].size == 0: # if this attribute has NOT already been chosen
+					threshold, info_gain = self._get_best_threshold(data_copy, i, labels) # TODO: why is info gain 1.251192 for a row of identical values?! should it not be 0?
+					if info_gain > best_gain: # and i is not in already_chosen_attributes
+						best_gain = info_gain
+						a_best = i
+						# add i to already_chosen_attributes
+						self.already_chosen_attributes = np.append(self.already_chosen_attributes, i)
+
+			if best_gain != 0:  # if 0 we must have split on all the attributes; no more info_gain to be gotten
+				leftChild, rightChild = self._split_data_according_to_attribute(data_copy, a_best, threshold=threshold)
+
+				tree.attribute = a_best
+				tree.threshold = threshold
+
+				if leftChild.size > 0:
+					tree.left = Tree()
+					leftChild[:, a_best] = -1 # blank out entire attribute column so we don't split on it again
+					self._build_tree(leftChild, labels, tree.left)
+				if rightChild.size > 0:
+					tree.right = Tree()
+					rightChild[:, a_best] = -1
+					self._build_tree(rightChild, labels, tree.right)
+
+	#### TODO - remove later, for testing only
+	def traverseTree(self, tree=None):
+		if tree is None:
+			tree = self.myTree
+
+		if tree.threshold is not None and tree.attribute is not None:
+			print("ATTRIBUTE:\t:", tree.attribute, "\nTHRESHOLD:\t", tree.threshold)
+
+			if tree.right is not None:
+				self.traverseTree(tree.right)
+
+	def _calculate_entropy(self, labels):
 		sum = 0.0
 		labels_unique = np.unique(labels, axis=0)
 		print("Calculating entropy...")
@@ -126,18 +185,19 @@ class Classifier:
 
 	def _split_data_according_to_attribute(self, data, attr_index, threshold=None):
 		# Create LHS and RHS of dataset
-		new_data_2 = []
-		new_data_1 = []
+		left_child = []
+		right_child = []
 
 		if (threshold != None):
 			for row in data:
 				if (row[attr_index] > threshold):
-					new_data_2.append(row)
+					np.delete(row, attr_index)  # remove the attribute itself
+					right_child.append(row)
 				else:
-					new_data_1.append(row)
-		### TODO: For discrete values
+					np.delete(row, attr_index)  # remove the attribute itself
+					left_child.append(row)
 
-		return [np.array(new_data_1), np.array(new_data_2)]
+		return np.array(left_child), np.array(right_child)
 
 	def _get_corresponding_labels(self, dataset, labels_whole_dataset):
 		labels_dataset = []
@@ -153,12 +213,14 @@ class Classifier:
 		for threshold in candidate_thresholds:
 			info_gain = self._calculate_info_gain(data, attr_index, labels, threshold)
 			info_gains.append(info_gain)
-		max_info_gain = max(float(sub) for sub in info_gains)
-		corresponding_index = info_gains.index(max_info_gain)
-		return candidate_thresholds[corresponding_index]
+		if len(info_gains) > 0:
+			max_info_gain = max(float(sub) for sub in info_gains)
+			corresponding_index = info_gains.index(max_info_gain)
+			return candidate_thresholds[corresponding_index], max_info_gain
+		else:
+			return -1, 0
 
 	def _calculate_info_gain(self, whole_dataset, attr_index, labels, threshold):
-		### TODO: For discrete values
 		datasets = self._split_data_according_to_attribute(whole_dataset, attr_index, threshold)
 
 		entropy_whole_dataset = self._calculate_entropy(labels)
@@ -171,6 +233,7 @@ class Classifier:
 			sum += (ratio * entropy_dataset)
 
 		return entropy_whole_dataset - sum
+
 
 if __name__ == '__main__':
 	data, labels = process_file("beer.txt")
