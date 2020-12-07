@@ -12,7 +12,7 @@ def process_file(filename) :
 	labels = np.array([])
 
 	lines = raw_text.split('\n')
-	random.shuffle(lines)
+	random.shuffle(lines) # TODO: may move somehwere else. Rereading file just for shufflinge
 	for line in lines:
 		attributes = np.array(line.split('\t'))
 		labels = np.append(labels, attributes[3]) # index 3 is the style, append to labels
@@ -76,10 +76,11 @@ class Tree(object):
 
 		self.attribute = None
 		self.threshold = None
+		self.classification = None
 
 class Classifier:
 	def __init__(self):
-		self.myTree = None
+		self.tree_root = None
 		self.already_chosen_attributes = np.empty([0], dtype=int)
 
 	def fit(self, X, y):
@@ -87,8 +88,25 @@ class Classifier:
 		self.traverseTree()
 
 	def predict(self, X):
-		### TODO
-		return []
+		predicted_labels = []
+		current_node = self.tree_root
+
+		for x_row in X:
+			current_node = self.tree_root
+
+			while current_node.attribute is not None and current_node.threshold is not None:
+				if x_row[current_node.attribute] < current_node.threshold:
+					if current_node.left is not None:
+						current_node = current_node.left
+				else: # >= threshold
+					if current_node.right is not None:
+						current_node = current_node.right
+				if current_node.right is None and current_node.left is None:
+					break
+
+			predicted_labels = np.append(predicted_labels, current_node.classification)
+
+		return predicted_labels
 
 	# private functions:
 
@@ -98,15 +116,15 @@ class Classifier:
 		# Initialise the tree
 		if tree is None:
 			tree = Tree()
-			self.myTree = tree # assign this root node to the member variable
+			self.tree_root = tree # assign this root node to the member variable
 
-		best_gain = 0  # is this the lowest possible info gain? idk
+		best_gain = 0
 		a_best = -1
 
 		if len(data_copy.shape) > 1:
 			threshold = None
 
-			for i in range(data_copy.shape[1] - 1): # don't do last element, as it just an id!
+			for i in range(data_copy.shape[1] - 1):
 				if np.where(self.already_chosen_attributes == i)[0].size == 0: # if this attribute has NOT already been chosen
 					threshold, info_gain = self._get_best_threshold(data_copy, i, labels) # TODO: why is info gain 1.251192 for a row of identical values?! should it not be 0?
 					if info_gain > best_gain: # and i is not in already_chosen_attributes
@@ -123,17 +141,36 @@ class Classifier:
 
 				if leftChild.size > 0:
 					tree.left = Tree()
+					tree.left.classification = self._get_dominant_classification(leftChild, labels)
 					leftChild[:, a_best] = -1 # blank out entire attribute column so we don't split on it again
 					self._build_tree(leftChild, labels, tree.left)
 				if rightChild.size > 0:
 					tree.right = Tree()
+					tree.right.classification = self._get_dominant_classification(rightChild, labels)
 					rightChild[:, a_best] = -1
 					self._build_tree(rightChild, labels, tree.right)
+
+	# TODO: make part of earlier step
+	def _get_dominant_classification(self, data, labels):
+		labels_for_data = self._get_corresponding_labels(data, labels)
+
+		dominant_class = "ale"
+
+		ale_count = repr(labels_for_data).count("ale")
+		stout_count = repr(labels_for_data).count("stout")
+		lager_count = repr(labels_for_data).count("lager")
+
+		if stout_count > ale_count:
+			dominant_class = "stout"
+		if lager_count > stout_count and lager_count > ale_count:
+			dominant_class = "lager"
+
+		return dominant_class
 
 	#### TODO - remove later, for testing only
 	def traverseTree(self, tree=None):
 		if tree is None:
-			tree = self.myTree
+			tree = self.tree_root
 
 		if tree.threshold is not None and tree.attribute is not None:
 			print("ATTRIBUTE:\t:", tree.attribute, "\nTHRESHOLD:\t", tree.threshold)
@@ -237,11 +274,22 @@ class Classifier:
 
 
 if __name__ == '__main__':
-	data, labels = process_file("beer.txt")
-	training_data, training_labels, testing_data, testing_labels = split_data_set(data, labels, 33.33)
+	number_of_runs = 3
+	total_accuracy = 0
 
-	classifier = Classifier()
-	classifier.fit(training_data, training_labels)
-	prediction = classifier.predict(testing_data)
+	for i in range(number_of_runs):
+		data, labels = process_file("beer.txt")
+		training_data, training_labels, testing_data, testing_labels = split_data_set(data, labels, 33.33) # TODO: training arrays are py arrays, testing arrays are numpy arrays. Change?
 
-	print("Accuracy: ", array_similarity(prediction, testing_labels), "%")
+		classifier = Classifier()
+		classifier.fit(training_data, training_labels)
+		prediction = classifier.predict(testing_data)
+
+
+		run_accuracy = array_similarity(prediction, testing_labels)
+		print("Accuracy: ", run_accuracy, "%")
+		total_accuracy += run_accuracy
+
+	total_accuracy /= number_of_runs
+
+	print("Total accuracy of", number_of_runs, "runs:", run_accuracy, "%")
