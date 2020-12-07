@@ -12,7 +12,7 @@ def process_file(filename) :
 	labels = np.array([])
 
 	lines = raw_text.split('\n')
-	random.shuffle(lines) # TODO: may move somehwere else. Rereading file just for shufflinge
+	random.shuffle(lines) # TODO: may move somewhere else. Rereading file just for shuffling
 	for line in lines:
 		attributes = np.array(line.split('\t'))
 		labels = np.append(labels, attributes[3]) # index 3 is the style, append to labels
@@ -22,9 +22,9 @@ def process_file(filename) :
 
 	return data, labels
 
-# check percentage similarity of two arrays
-# if inputs are incompatible (eg different array lengths) returns -1
 def array_similarity(array_1, array_2):
+	# check percentage similarity of two arrays
+	# if inputs are incompatible (eg different array lengths) returns -1
 	identical = 0
 	different = 0
 
@@ -67,9 +67,8 @@ def split_data_set(data_array, label_array, percentage_for_training) :
 
 	return training_data, training_labels, testing_data, testing_labels
 
-
 # TODO: maybe rename to Node? TreeNode maybe?
-class Tree(object):
+class TreeNode(object):
 	def __init__(self):
 		self.left = None
 		self.right = None
@@ -108,14 +107,14 @@ class Classifier:
 
 		return predicted_labels
 
-	# private functions:
+	# PRIVATE FUNCTIONS:
 
 	def _build_tree(self, data_copy, labels, tree=None):
 		# Build tree up recursively
 
 		# Initialise the tree
 		if tree is None:
-			tree = Tree()
+			tree = TreeNode()
 			self.tree_root = tree # assign this root node to the member variable
 
 		best_gain = 0
@@ -140,12 +139,12 @@ class Classifier:
 				tree.threshold = threshold
 
 				if leftChild.size > 0:
-					tree.left = Tree()
+					tree.left = TreeNode()
 					tree.left.classification = self._get_dominant_classification(leftChild, labels)
 					leftChild[:, a_best] = -1 # blank out entire attribute column so we don't split on it again
 					self._build_tree(leftChild, labels, tree.left)
 				if rightChild.size > 0:
-					tree.right = Tree()
+					tree.right = TreeNode()
 					tree.right.classification = self._get_dominant_classification(rightChild, labels)
 					rightChild[:, a_best] = -1
 					self._build_tree(rightChild, labels, tree.right)
