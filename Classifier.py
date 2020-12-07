@@ -2,8 +2,9 @@ import random
 import numpy as np
 import math
 
+
 # open file and read in formatted content to text array
-def process_file(filename) :
+def process_file(filename):
 	file = open(filename, "r")
 	raw_text = file.read()
 	file.close()
@@ -12,15 +13,16 @@ def process_file(filename) :
 	labels = np.array([])
 
 	lines = raw_text.split('\n')
-	random.shuffle(lines) # TODO: may move somewhere else. Rereading file just for shuffling
+	random.shuffle(lines)  # TODO: may move somewhere else. Rereading file just for shuffling
 	for line in lines:
 		attributes = np.array(line.split('\t'))
-		labels = np.append(labels, attributes[3]) # index 3 is the style, append to labels
-		attributes = np.delete(attributes, 3) # and then delete it from the data
-		attributes = attributes.astype(np.float) # all other attributes should be floats
+		labels = np.append(labels, attributes[3])  # index 3 is the style, append to labels
+		attributes = np.delete(attributes, 3)  # and then delete it from the data
+		attributes = attributes.astype(np.float)  # all other attributes should be floats
 		data = np.append(data, np.array([attributes]), axis=0)
 
 	return data, labels
+
 
 def array_similarity(array_1, array_2):
 	# check percentage similarity of two arrays
@@ -34,13 +36,14 @@ def array_similarity(array_1, array_2):
 				identical += 1
 			else:
 				different += 1
-	else :
+	else:
 		return -1
 
 	# round % to 2 decimal places
 	return round((identical / (identical + different) * 100), 2)
 
-def split_data_set(data_array, label_array, percentage_for_training) :
+
+def split_data_set(data_array, label_array, percentage_for_training):
 	# takes data and label arrays and splits them into training and test based on percentage provided
 	training_data = data_array
 	training_labels = label_array
@@ -48,11 +51,11 @@ def split_data_set(data_array, label_array, percentage_for_training) :
 	testing_data = []
 	testing_labels = []
 
-	training_data_length = (len(data_array) * (percentage_for_training/100))
+	training_data_length = (len(data_array) * (percentage_for_training / 100))
 
 	i = 0
 
-	while (i < training_data_length) :
+	while (i < training_data_length):
 		chance = (random.randint(1, len(data_array)))
 		if (chance < training_data_length):
 			# put the randomly selected data instance into the testing array
@@ -67,6 +70,7 @@ def split_data_set(data_array, label_array, percentage_for_training) :
 
 	return training_data, training_labels, testing_data, testing_labels
 
+
 # TODO: maybe rename to Node? TreeNode maybe?
 class TreeNode(object):
 	def __init__(self):
@@ -76,6 +80,7 @@ class TreeNode(object):
 		self.attribute = None
 		self.threshold = None
 		self.classification = None
+
 
 class Classifier:
 	def __init__(self):
@@ -97,7 +102,7 @@ class Classifier:
 				if x_row[current_node.attribute] < current_node.threshold:
 					if current_node.left is not None:
 						current_node = current_node.left
-				else: # >= threshold
+				else:  # >= threshold
 					if current_node.right is not None:
 						current_node = current_node.right
 				if current_node.right is None and current_node.left is None:
@@ -115,7 +120,7 @@ class Classifier:
 		# Initialise the tree
 		if tree is None:
 			tree = TreeNode()
-			self.tree_root = tree # assign this root node to the member variable
+			self.tree_root = tree  # assign this root node to the member variable
 
 		best_gain = 0
 		a_best = -1
@@ -124,9 +129,10 @@ class Classifier:
 			threshold = None
 
 			for i in range(data_copy.shape[1] - 1):
-				if np.where(self.already_chosen_attributes == i)[0].size == 0: # if this attribute has NOT already been chosen
-					threshold, info_gain = self._get_best_threshold(data_copy, i, labels) # TODO: why is info gain 1.251192 for a row of identical values?! should it not be 0?
-					if info_gain > best_gain: # and i is not in already_chosen_attributes
+				if np.where(self.already_chosen_attributes == i)[
+					0].size == 0:  # if this attribute has NOT already been chosen
+					threshold, info_gain = self._get_best_threshold(data_copy, i, labels)  # TODO: why is info gain 1.251192 for a row of identical values?! should it not be 0?
+					if info_gain > best_gain:  # and i is not in already_chosen_attributes
 						best_gain = info_gain
 						a_best = i
 						# add i to already_chosen_attributes
@@ -141,7 +147,7 @@ class Classifier:
 				if leftChild.size > 0:
 					tree.left = TreeNode()
 					tree.left.classification = self._get_dominant_classification(leftChild, labels)
-					leftChild[:, a_best] = -1 # blank out entire attribute column so we don't split on it again
+					leftChild[:, a_best] = -1  # blank out entire attribute column so we don't split on it again
 					self._build_tree(leftChild, labels, tree.left)
 				if rightChild.size > 0:
 					tree.right = TreeNode()
@@ -153,15 +159,17 @@ class Classifier:
 	def _get_dominant_classification(self, data, labels):
 		labels_for_data = self._get_corresponding_labels(data, labels)
 
-		dominant_class = "ale"
+		dominant_class = None
 
 		ale_count = repr(labels_for_data).count("ale")
 		stout_count = repr(labels_for_data).count("stout")
 		lager_count = repr(labels_for_data).count("lager")
 
-		if stout_count > ale_count:
+		if (ale_count >= stout_count) and (ale_count >= lager_count):
+			dominant_class = "ale"
+		elif (stout_count >= ale_count) and (stout_count >= lager_count):
 			dominant_class = "stout"
-		if lager_count > stout_count and lager_count > ale_count:
+		else:
 			dominant_class = "lager"
 
 		return dominant_class
@@ -178,15 +186,15 @@ class Classifier:
 	def _calculate_entropy(self, labels):
 		sum = 0.0
 		labels_unique = np.unique(labels, axis=0)
-		#print("Calculating entropy...")
-		#print("Labels:")
-		#print(labels_unique)
+		# print("Calculating entropy...")
+		# print("Labels:")
+		# print(labels_unique)
 		for label in labels_unique:
 			label_count = len(labels[labels == label])
 			label_proportion = float(label_count) / float(len(labels))
-			#print(label + " proportion = " + str(label_count) + "/" + str(len(labels)) + " = " + str(label_proportion))
+			# print(label + " proportion = " + str(label_count) + "/" + str(len(labels)) + " = " + str(label_proportion))
 			sum += -1 * label_proportion * (math.log(label_proportion, 2))
-		#print("Entropy = " + str(sum))
+		# print("Entropy = " + str(sum))
 		return sum
 
 	def _get_candidate_thresholds(self, data, labels, attr_index):
@@ -276,17 +284,16 @@ if __name__ == '__main__':
 
 	for i in range(number_of_runs):
 		data, labels = process_file("beer.txt")
-		training_data, training_labels, testing_data, testing_labels = split_data_set(data, labels, 33.33) # TODO: training arrays are py arrays, testing arrays are numpy arrays. Change?
+		training_data, training_labels, testing_data, testing_labels = split_data_set(data, labels, 33.33)  # TODO: training arrays are py arrays, testing arrays are numpy arrays. Change?
 
 		classifier = Classifier()
 		classifier.fit(training_data, training_labels)
 		prediction = classifier.predict(testing_data)
 
-
 		run_accuracy = array_similarity(prediction, testing_labels)
-		print("Accuracy: ", run_accuracy, "%")
+		print("Accuracy for run", i+1, ":", run_accuracy, "%")
 		total_accuracy += run_accuracy
 
 	total_accuracy /= number_of_runs
 
-	print("Total accuracy of", number_of_runs, "runs:", total_accuracy, "%")
+	print("Total accuracy of", number_of_runs, "runs:", round(total_accuracy, 2), "%")
