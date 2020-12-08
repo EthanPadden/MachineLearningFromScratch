@@ -13,7 +13,7 @@ def process_file(filename):
 	labels = np.array([])
 
 	lines = raw_text.split('\n')
-	random.shuffle(lines)  # TODO: may move somewhere else. Rereading file just for shuffling
+	#random.shuffle(lines)  # TODO: may move somewhere else. Rereading file just for shuffling
 	for line in lines:
 		attributes = np.array(line.split('\t'))
 		np.delete(attributes, 7) # an ID column, which we don't went to train our model on
@@ -191,7 +191,10 @@ class Classifier:
 		# print("Labels:")
 		# print(labels_unique)
 		for label in labels_unique:
-			label_count = len(labels[labels == label])
+			labels_match = labels[labels == label]
+			# label_count = len(labels_match)
+			labels_copy = labels.copy()
+			label_count = labels_copy.count(label)
 			label_proportion = float(label_count) / float(len(labels))
 			# print(label + " proportion = " + str(label_count) + "/" + str(len(labels)) + " = " + str(label_proportion))
 			sum += -1 * label_proportion * (math.log(label_proportion, 2))
@@ -267,7 +270,7 @@ class Classifier:
 	def _calculate_info_gain(self, whole_dataset, attr_index, labels, threshold):
 		datasets = self._split_data_according_to_attribute(whole_dataset, attr_index, threshold)
 
-		entropy_whole_dataset = self._calculate_entropy(labels)
+		entropy_whole_dataset = self._calculate_entropy(labels.tolist())
 
 		sum = 0
 		for dataset in datasets:
@@ -284,17 +287,20 @@ if __name__ == '__main__':
 	total_accuracy = 0
 
 	for i in range(number_of_runs):
-		data, labels = process_file("beer.txt")
-		training_data, training_labels, testing_data, testing_labels = split_data_set(data, labels, 33.33)  # TODO: training arrays are py arrays, testing arrays are numpy arrays. Change?
+		# data, labels = process_file("beer.txt")
+		data2, labels2 = process_file("beershort.txt")
+		#training_data, training_labels, testing_data, testing_labels = split_data_set(data, labels, 33.33)  # TODO: training arrays are py arrays, testing arrays are numpy arrays. Change?
 
 		classifier = Classifier()
-		classifier.fit(training_data, training_labels)
-		prediction = classifier.predict(testing_data)
-
-		run_accuracy = array_similarity(prediction, testing_labels)
-		print("Accuracy for run", i+1, ":", run_accuracy, "%")
-		total_accuracy += run_accuracy
-
-	total_accuracy /= number_of_runs
-
-	print("Total accuracy of", number_of_runs, "runs:", round(total_accuracy, 2), "%")
+		ig = classifier._calculate_info_gain(data2, 4, labels2, 17)
+		print("Done")
+		# classifier.fit(training_data, training_labels)
+		# prediction = classifier.predict(testing_data)
+		#
+		# run_accuracy = array_similarity(prediction, testing_labels)
+	# 	print("Accuracy for run", i+1, ":", run_accuracy, "%")
+	# 	total_accuracy += run_accuracy
+	#
+	# total_accuracy /= number_of_runs
+	#
+	# print("Total accuracy of", number_of_runs, "runs:", round(total_accuracy, 2), "%")
