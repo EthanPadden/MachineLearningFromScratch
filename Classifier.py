@@ -258,7 +258,7 @@ class Classifier:
 		candidate_thresholds = self._get_candidate_thresholds(data, labels, attr_index)
 		info_gains = []
 		for threshold in candidate_thresholds:
-			info_gain = self._calculate_info_gain(data, attr_index, labels, threshold)
+			info_gain, info_gain_ratio = self._calculate_info_gain(data, attr_index, labels, threshold)
 			info_gains.append(info_gain)
 		if len(info_gains) > 0:
 			max_info_gain = max(float(sub) for sub in info_gains)
@@ -273,13 +273,16 @@ class Classifier:
 		entropy_whole_dataset = self._calculate_entropy(labels.tolist())
 
 		sum = 0
+		sum_entropy = 0
 		for dataset in datasets:
 			ratio = len(dataset) / len(whole_dataset)
 			current_dataset_labels = self._get_corresponding_labels(dataset, labels)
 			entropy_dataset = self._calculate_entropy(current_dataset_labels)
+			sum_entropy += entropy_dataset
 			sum += (ratio * entropy_dataset)
-
-		return entropy_whole_dataset - sum
+		info_gain = entropy_whole_dataset - sum
+		info_gain_ratio = info_gain/sum_entropy
+		return info_gain, info_gain_ratio
 
 
 if __name__ == '__main__':
@@ -292,7 +295,7 @@ if __name__ == '__main__':
 		#training_data, training_labels, testing_data, testing_labels = split_data_set(data, labels, 33.33)  # TODO: training arrays are py arrays, testing arrays are numpy arrays. Change?
 
 		classifier = Classifier()
-		ig = classifier._calculate_info_gain(data2, 4, labels2, 17)
+		ig,igr = classifier._calculate_info_gain(data2, 1, labels2, 0.5)
 		print("Done")
 		# classifier.fit(training_data, training_labels)
 		# prediction = classifier.predict(testing_data)
