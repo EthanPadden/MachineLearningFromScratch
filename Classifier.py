@@ -1,3 +1,12 @@
+"""
+C4.5 Implementation
+https://github.com/liamroddy/MachineLearningFromScratch
+
+Authors:
+Ethan Padden (17744021)
+Liam Roddy (17738889)
+"""
+
 import random
 import numpy as np
 import math
