@@ -9,16 +9,21 @@ def process_file(filename):
 	raw_text = file.read()
 	file.close()
 
-	data = np.empty((0, 10), float)
-	labels = np.array([])
+	data = np.empty((0, 9), float)
+	labels = np.empty((304), dtype='U25') # what's actual max size? bigger than 154 anyway
 
 	lines = raw_text.split('\n')
 	random.shuffle(lines)  # TODO: may move somewhere else. Rereading file just for shuffling
 	for line in lines:
 		attributes = np.array(line.split('\t'))
-		np.delete(attributes, 7) # an ID column, which we don't went to train our model on
-		labels = np.append(labels, attributes[3])  # index 3 is the style, append to labels
+
+		classification = str(attributes[3])
+		index = int(attributes[7])
+		labels = np.insert(labels, index, classification)
+		#labels = np.append(labels, np.array([[int(attributes[7]), attributes[3]]]), axis=0)  # also give labels the ID attribute
+		#attributes = np.delete(attributes, 7)  # an ID column, which we don't went to train our model on
 		attributes = np.delete(attributes, 3)  # and then delete it from the data
+
 		attributes = attributes.astype(np.float)  # all other attributes should be floats
 		data = np.append(data, np.array([attributes]), axis=0)
 
@@ -49,8 +54,8 @@ def split_data_set(data_array, label_array, percentage_for_training):
 	training_data = data_array
 	training_labels = label_array
 
-	testing_data = []
-	testing_labels = []
+	testing_data = np.empty((0, 9), float)
+	testing_labels = np.empty((0), dtype='U25')  # what's actual max size? bigger than 154 anyway
 
 	training_data_length = (len(data_array) * (percentage_for_training / 100))
 
@@ -60,19 +65,25 @@ def split_data_set(data_array, label_array, percentage_for_training):
 		chance = (random.randint(1, len(data_array)))
 		if (chance < training_data_length):
 			# put the randomly selected data instance into the testing array
-			testing_data.insert(1, training_data[i])
-			testing_labels.insert(1, training_labels[i])
+			#sdffdsf = np.array([training_data[i]])
+			#sdffdxcsf = int(np.array([training_data[i][6]]))
+			testing_data = np.append(testing_data, np.array([training_data[i]]), axis=0)
+			# so get attribute 6 of chosen row
+			# this is the index in training_labels to grab out label from
+			row = training_data[i]
+			fizzz = int(np.array([training_data[i][6]]))
+			buzz = training_labels[int(np.array([training_data[i][6]]))]
+			testing_labels = np.append(testing_labels, np.array([training_labels[ int(np.array([training_data[i][6]])) ] ]), axis=0)
 
 			# then delete it from the training array
-			np.delete(training_data, i)
-			np.delete(training_labels, i)
+			training_data = np.delete(training_data, i, axis=0)
+			#training_labels = np.delete(training_labels, i, axis=0)
 
 			i += 1
 
 	return training_data, training_labels, testing_data, testing_labels
 
 
-# TODO: maybe rename to Node? TreeNode maybe?
 class TreeNode(object):
 	def __init__(self):
 		self.left = None
@@ -87,9 +98,11 @@ class Classifier:
 	def __init__(self):
 		self.tree_root = None
 		self.already_chosen_attributes = np.empty([0], dtype=int)
+		self.total_tree_count = 0 # ??????????
 
 	def fit(self, X, y):
 		self._build_tree(X, y)
+		print("TREE NODES:", self.total_tree_count)
 		self.traverseTree()
 
 	def predict(self, X):
@@ -129,9 +142,8 @@ class Classifier:
 		if len(data_copy.shape) > 1:
 			threshold = None
 
-			for i in range(data_copy.shape[1] - 1):
-				if np.where(self.already_chosen_attributes == i)[
-					0].size == 0:  # if this attribute has NOT already been chosen
+			for i in range(data_copy.shape[1]): # TODO: ignore #6!!!!!!!!!
+				if i != 6 and np.where(self.already_chosen_attributes == i)[0].size == 0:  # if this attribute has NOT already been chosen
 					threshold, info_gain = self._get_best_threshold(data_copy, i, labels)  # TODO: why is info gain 1.251192 for a row of identical values?! should it not be 0?
 					if info_gain > best_gain:  # and i is not in already_chosen_attributes
 						best_gain = info_gain
@@ -140,6 +152,8 @@ class Classifier:
 						self.already_chosen_attributes = np.append(self.already_chosen_attributes, i)
 
 			if best_gain != 0:  # if 0 we must have split on all the attributes; no more info_gain to be gotten
+				self.total_tree_count += 1
+
 				leftChild, rightChild = self._split_data_according_to_attribute(data_copy, a_best, threshold=threshold)
 
 				tree.attribute = a_best
@@ -186,7 +200,25 @@ class Classifier:
 
 	def _calculate_entropy(self, labels):
 		sum = 0.0
-		labels_unique = np.unique(labels, axis=0)
+
+		if len(labels) < 1:
+			return 0
+
+		#simple_labels = labels[labels != ""]
+		#if len(labels) < 2:
+			#return 0
+
+		#simple_labels = [labels[labels != ""]]#np.where(labels != "")
+		simple_labels = np.delete(labels, np.where(labels == ""))
+		#simple_labels = labels[labels == "ale"]
+		#simple_labels = np.append(simple_labels, labels[labels == "lager"])
+		#simple_labels = np.append(simple_labels, labels[labels == "stout"])
+
+		labels_unique = np.unique(simple_labels, axis=0)
+
+		#, labels[labels == "stout"])
+		#labels = np.append(np.array([]), labels[labels == "lager"])
+		#labels = labels[labels is not ""]
 		# print("Calculating entropy...")
 		# print("Labels:")
 		# print(labels_unique)
@@ -210,8 +242,8 @@ class Classifier:
 		candidate_thresholds = []
 
 		for sorted_index in range(len(data_for_sorting) - 1):
-			current_unsorted_index = int(data_for_sorting[sorted_index][9])
-			next_unsorted_index = int(data_for_sorting[sorted_index + 1][9])
+			current_unsorted_index = int(data_for_sorting[sorted_index][6])
+			next_unsorted_index = int(data_for_sorting[sorted_index + 1][6])
 			current_label_value = labels[current_unsorted_index]
 			next_label_value = labels[next_unsorted_index]
 
@@ -244,10 +276,22 @@ class Classifier:
 
 		return np.array(left_child), np.array(right_child)
 
+	def _get_label(self, index, labels):
+		# find index on column 0
+		# find match on column 1
+		# retunr column 1 entry
+
+		col0 = labels[:,0]
+		ind = str(index)
+
+		row = np.where(col0 == ind)
+
+		return labels[row[0], 1] # nope, not row, ectract info
+
 	def _get_corresponding_labels(self, dataset, labels_whole_dataset):
 		labels_dataset = []
 		for row in dataset:
-			index = int(row[9])
+			index = int(row[6])
 			labels_dataset.append(labels_whole_dataset[index])
 
 		return labels_dataset
