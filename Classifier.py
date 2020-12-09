@@ -19,7 +19,6 @@ def process_file(filename):
 
 		classification = str(attributes[3])
 		index = int(attributes[7])
-		labels = np.insert(labels, index, classification)
 		labels[index] = classification
 
 		attributes = np.delete(attributes, 3)  # delete classification from the data
