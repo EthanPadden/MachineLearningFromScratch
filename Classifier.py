@@ -193,7 +193,9 @@ class Classifier:
 		if len(labels) < 1: # TODO: may not be needed
 			return 0
 
-		labels = np.delete(labels, np.where(labels == "")) # remove blank entries
+		# remove blank entries
+		labels = np.delete(labels, np.where(labels == None))
+		labels = np.delete(labels, np.where(labels == ""))
 
 		labels_unique = np.unique(labels.astype('str'), axis=0)
 
@@ -202,8 +204,8 @@ class Classifier:
 		# print(labels_unique)
 		for label in labels_unique:
 			labels_copy = labels.copy()
-			label_count = len(np.where(labels == label))
-			label_proportion = float(label_count) / float(len(labels))
+			label_count = len(np.where(labels == label)[0])
+			label_proportion = float(label_count) / float(labels.size)
 			# print(label + " proportion = " + str(label_count) + "/" + str(len(labels)) + " = " + str(label_proportion))
 			sum += -1 * label_proportion * (math.log(label_proportion, 2))
 		# print("Entropy = " + str(sum))
@@ -279,7 +281,7 @@ class Classifier:
 	def _calculate_info_gain(self, whole_dataset, attr_index, labels, threshold):
 		datasets = self._split_data_according_to_attribute(whole_dataset, attr_index, threshold)
 
-		entropy_whole_dataset = self._calculate_entropy(labels.tolist())
+		entropy_whole_dataset = self._calculate_entropy(labels)
 
 		sum = 0
 		sum_entropy = 0
