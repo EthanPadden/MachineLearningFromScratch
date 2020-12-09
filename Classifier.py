@@ -10,10 +10,10 @@ def process_file(filename):
 	file.close()
 
 	data = np.empty((0, 9), float)
-	labels = np.empty((304), dtype='object') # what's actual max size? bigger than 154 anyway
+	labels = np.empty((304), dtype='object')
 
 	lines = raw_text.split('\n')
-	random.shuffle(lines)  # TODO: may move somewhere else. Rereading file just for shuffling
+	random.shuffle(lines)
 	for line in lines:
 		attributes = np.array(line.split('\t'))
 
@@ -53,7 +53,7 @@ def split_data_set(data_array, label_array, percentage_for_training):
 	training_labels = label_array
 
 	testing_data = np.empty((0, 9), float)
-	testing_labels = np.empty((0), dtype='<U5')  # what's actual max size? bigger than 154 anyway
+	testing_labels = np.empty((0), dtype='<U5')
 
 	training_data_length = (len(data_array) * (percentage_for_training / 100))
 
@@ -67,7 +67,7 @@ def split_data_set(data_array, label_array, percentage_for_training):
 
 			id_int = int(np.array([training_data[i][6]])) # get the beer id
 			label_string = str(training_labels[id_int]) # get the corresponding label for that beer id
-			testing_labels = np.append(testing_labels, np.array([label_string]) , axis=0) # and add it to the testing_labels
+			testing_labels = np.append(testing_labels, np.array([label_string]), axis=0) # and add it to the testing_labels
 
 			# then delete the whole data instance from the training array
 			training_data = np.delete(training_data, i, axis=0)
@@ -94,7 +94,6 @@ class Classifier:
 
 	def fit(self, X, y):
 		self._build_tree(X, y)
-		self.traverseTree()
 
 	def predict(self, X):
 		predicted_labels = []
@@ -104,13 +103,13 @@ class Classifier:
 			current_node = self.tree_root
 
 			while current_node.attribute is not None and current_node.threshold is not None:
-				if x_row[current_node.attribute] < current_node.threshold:
+				if x_row[current_node.attribute] <= current_node.threshold:
 					if current_node.left is not None:
 						current_node = current_node.left
-				else:  # >= threshold
+				else:  # > threshold
 					if current_node.right is not None:
 						current_node = current_node.right
-				if current_node.right is None and current_node.left is None:
+				if current_node.right is None and current_node.left is None: # if leaf node
 					break
 
 			predicted_labels = np.append(predicted_labels, current_node.classification)
@@ -125,7 +124,7 @@ class Classifier:
 		# Initialise the tree
 		if tree is None:
 			tree = TreeNode()
-			self.tree_root = tree  # assign this root node to the member variable
+			self.tree_root = tree
 
 		best_gain = 0
 		a_best = -1
@@ -136,7 +135,7 @@ class Classifier:
 			for i in range(data_copy.shape[1]):
 				# if this attribute is not an ID and has not already been chosen
 				if i != 6 and np.where(self.already_chosen_attributes == i)[0].size == 0:
-					threshold, info_gain = self._get_best_threshold(data_copy, i, labels)  # TODO: why is info gain 1.251192 for a row of identical values?! should it not be 0?
+					threshold, info_gain = self._get_best_threshold(data_copy, i, labels)
 					if info_gain > best_gain:  # and i is not in already_chosen_attributes
 						best_gain = info_gain
 						a_best = i
@@ -160,7 +159,6 @@ class Classifier:
 					rightChild[:, a_best] = -1
 					self._build_tree(rightChild, labels, tree.right)
 
-	# TODO: make part of earlier step
 	def _get_dominant_classification(self, data, labels):
 		labels_for_data = self._get_corresponding_labels(data, labels)
 
@@ -179,20 +177,8 @@ class Classifier:
 
 		return dominant_class
 
-	#### TODO - remove later, for testing only
-	def traverseTree(self, tree=None):
-		if tree is None:
-			tree = self.tree_root
-
-		if tree.threshold is not None and tree.attribute is not None:
-			if tree.right is not None:
-				self.traverseTree(tree.right)
-
 	def _calculate_entropy(self, labels):
 		sum = 0.0
-
-		if len(labels) < 1: # TODO: may not be needed
-			return 0
 
 		# remove blank entries
 		labels = np.delete(labels, np.where(labels == None))
@@ -200,16 +186,11 @@ class Classifier:
 
 		labels_unique = np.unique(labels.astype('str'), axis=0)
 
-		# print("Calculating entropy...")
-		# print("Labels:")
-		# print(labels_unique)
 		for label in labels_unique:
 			labels_copy = labels.copy()
 			label_count = len(np.where(labels == label)[0])
 			label_proportion = float(label_count) / float(labels.size)
-			# print(label + " proportion = " + str(label_count) + "/" + str(len(labels)) + " = " + str(label_proportion))
 			sum += -1 * label_proportion * (math.log(label_proportion, 2))
-		# print("Entropy = " + str(sum))
 		return sum
 
 	def _get_candidate_thresholds(self, data, labels, attr_index):
@@ -303,8 +284,7 @@ if __name__ == '__main__':
 
 	for i in range(number_of_runs):
 		data, labels = process_file("beer.txt")
-		#data2, labels2 = process_file("beershort.txt")
-		training_data, training_labels, testing_data, testing_labels = split_data_set(data, labels, 33.33)  # TODO: training arrays are py arrays, testing arrays are numpy arrays. Change?
+		training_data, training_labels, testing_data, testing_labels = split_data_set(data, labels, 33.33)
 
 		classifier = Classifier()
 		classifier.fit(training_data, training_labels)
