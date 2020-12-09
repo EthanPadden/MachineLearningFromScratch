@@ -10,7 +10,7 @@ def process_file(filename):
 	file.close()
 
 	data = np.empty((0, 9), float)
-	labels = np.empty((304), dtype='U25') # what's actual max size? bigger than 154 anyway
+	labels = np.empty((304), dtype='object') # what's actual max size? bigger than 154 anyway
 
 	lines = raw_text.split('\n')
 	random.shuffle(lines)  # TODO: may move somewhere else. Rereading file just for shuffling
@@ -20,10 +20,9 @@ def process_file(filename):
 		classification = str(attributes[3])
 		index = int(attributes[7])
 		labels = np.insert(labels, index, classification)
-		#labels = np.append(labels, np.array([[int(attributes[7]), attributes[3]]]), axis=0)  # also give labels the ID attribute
-		#attributes = np.delete(attributes, 7)  # an ID column, which we don't went to train our model on
-		attributes = np.delete(attributes, 3)  # and then delete it from the data
+		labels[index] = classification
 
+		attributes = np.delete(attributes, 3)  # delete classification from the data
 		attributes = attributes.astype(np.float)  # all other attributes should be floats
 		data = np.append(data, np.array([attributes]), axis=0)
 
@@ -55,7 +54,7 @@ def split_data_set(data_array, label_array, percentage_for_training):
 	training_labels = label_array
 
 	testing_data = np.empty((0, 9), float)
-	testing_labels = np.empty((0), dtype='U25')  # what's actual max size? bigger than 154 anyway
+	testing_labels = np.empty((0), dtype='<U5')  # what's actual max size? bigger than 154 anyway
 
 	training_data_length = (len(data_array) * (percentage_for_training / 100))
 
@@ -65,19 +64,14 @@ def split_data_set(data_array, label_array, percentage_for_training):
 		chance = (random.randint(1, len(data_array)))
 		if (chance < training_data_length):
 			# put the randomly selected data instance into the testing array
-			#sdffdsf = np.array([training_data[i]])
-			#sdffdxcsf = int(np.array([training_data[i][6]]))
 			testing_data = np.append(testing_data, np.array([training_data[i]]), axis=0)
-			# so get attribute 6 of chosen row
-			# this is the index in training_labels to grab out label from
-			row = training_data[i]
-			fizzz = int(np.array([training_data[i][6]]))
-			buzz = training_labels[int(np.array([training_data[i][6]]))]
-			testing_labels = np.append(testing_labels, np.array([training_labels[ int(np.array([training_data[i][6]])) ] ]), axis=0)
 
-			# then delete it from the training array
+			id_int = int(np.array([training_data[i][6]])) # get the beer id
+			label_string = str(training_labels[id_int]) # get the corresponding label for that beer id
+			testing_labels = np.append(testing_labels, np.array([label_string]) , axis=0) # and add it to the testing_labels
+
+			# then delete the whole data instance from the training array
 			training_data = np.delete(training_data, i, axis=0)
-			#training_labels = np.delete(training_labels, i, axis=0)
 
 			i += 1
 
@@ -142,7 +136,7 @@ class Classifier:
 		if len(data_copy.shape) > 1:
 			threshold = None
 
-			for i in range(data_copy.shape[1]): # TODO: ignore #6!!!!!!!!!
+			for i in range(data_copy.shape[1]):
 				if i != 6 and np.where(self.already_chosen_attributes == i)[0].size == 0:  # if this attribute has NOT already been chosen
 					threshold, info_gain = self._get_best_threshold(data_copy, i, labels)  # TODO: why is info gain 1.251192 for a row of identical values?! should it not be 0?
 					if info_gain > best_gain:  # and i is not in already_chosen_attributes
@@ -201,30 +195,19 @@ class Classifier:
 	def _calculate_entropy(self, labels):
 		sum = 0.0
 
-		if len(labels) < 1:
+		if len(labels) < 1: # TODO: may not be needed
 			return 0
 
-		#simple_labels = labels[labels != ""]
-		#if len(labels) < 2:
-			#return 0
+		labels = np.delete(labels, np.where(labels == ""))
 
-		#simple_labels = [labels[labels != ""]]#np.where(labels != "")
-		simple_labels = np.delete(labels, np.where(labels == ""))
-		#simple_labels = labels[labels == "ale"]
-		#simple_labels = np.append(simple_labels, labels[labels == "lager"])
-		#simple_labels = np.append(simple_labels, labels[labels == "stout"])
+		labels_unique = np.unique(labels.astype('str'), axis=0)
 
-		labels_unique = np.unique(simple_labels, axis=0)
-
-		#, labels[labels == "stout"])
-		#labels = np.append(np.array([]), labels[labels == "lager"])
-		#labels = labels[labels is not ""]
 		# print("Calculating entropy...")
 		# print("Labels:")
 		# print(labels_unique)
 		for label in labels_unique:
 			labels_copy = labels.copy()
-			label_count = labels_copy.count(label)
+			label_count = len(np.where(labels == label))
 			label_proportion = float(label_count) / float(len(labels))
 			# print(label + " proportion = " + str(label_count) + "/" + str(len(labels)) + " = " + str(label_proportion))
 			sum += -1 * label_proportion * (math.log(label_proportion, 2))
@@ -301,7 +284,7 @@ class Classifier:
 		info_gains = []
 		for threshold in candidate_thresholds:
 			info_gain, info_gain_ratio = self._calculate_info_gain(data, attr_index, labels, threshold)
-			info_gains.append(info_gain_ratio)#info_gain)
+			info_gains.append(info_gain)
 		if len(info_gains) > 0:
 			max_info_gain = max(float(sub) for sub in info_gains)
 			corresponding_index = info_gains.index(max_info_gain)
