@@ -11,7 +11,7 @@ import random
 import numpy as np
 import math
 
-
+'''Author: Liam Roddy'''
 # open file and read in formatted content to text array
 def process_file(filename):
 	file = open(filename, "r")
@@ -36,7 +36,7 @@ def process_file(filename):
 
 	return data, labels
 
-
+'''Author: Liam Roddy'''
 def array_similarity(array_1, array_2):
 	# check percentage similarity of two arrays
 	# if inputs are incompatible (eg different array lengths) returns -1
@@ -55,7 +55,7 @@ def array_similarity(array_1, array_2):
 	# round % to 2 decimal places
 	return round((identical / (identical + different) * 100), 2)
 
-
+'''Author: Liam Roddy'''
 def split_data_set(data_array, label_array, percentage_for_training):
 	# takes data and label arrays and splits them into training and test based on percentage provided
 	training_data = data_array
@@ -85,7 +85,7 @@ def split_data_set(data_array, label_array, percentage_for_training):
 
 	return training_data, training_labels, testing_data, testing_labels
 
-
+'''Author: Liam Roddy'''
 class TreeNode(object):
 	def __init__(self):
 		self.left = None
@@ -97,13 +97,16 @@ class TreeNode(object):
 
 
 class Classifier:
+	'''Author: Liam Roddy'''
 	def __init__(self):
 		self.tree_root = None
 		self.already_chosen_attributes = np.empty([0], dtype=int)
 
+	'''Author: Liam Roddy'''
 	def fit(self, X, y):
 		self._build_tree(X, y)
 
+	'''Author: Liam Roddy'''
 	def predict(self, X):
 		predicted_labels = []
 		current_node = self.tree_root
@@ -126,7 +129,7 @@ class Classifier:
 		return predicted_labels
 
 	# PRIVATE FUNCTIONS:
-
+	'''Author: Liam Roddy'''
 	def _build_tree(self, data_copy, labels, tree=None):
 		# Build tree up recursively
 
@@ -168,6 +171,7 @@ class Classifier:
 					rightChild[:, a_best] = -1
 					self._build_tree(rightChild, labels, tree.right)
 
+	'''Author: Liam Roddy'''
 	def _get_dominant_classification(self, data, labels):
 		labels_for_data = self._get_corresponding_labels(data, labels)
 
@@ -186,6 +190,7 @@ class Classifier:
 
 		return dominant_class
 
+	'''Author: Ethan Padden'''
 	def _calculate_entropy(self, labels):
 		sum = 0.0
 
@@ -202,6 +207,7 @@ class Classifier:
 			sum += -1 * label_proportion * (math.log(label_proportion, 2))
 		return sum
 
+	'''Author: Ethan Padden'''
 	def _get_candidate_thresholds(self, data, labels, attr_index):
 		# Make a copy of the data for sorting without affecting the original sort order
 		data_for_sorting = data.copy()
@@ -231,6 +237,7 @@ class Classifier:
 		# Return the candidate list
 		return candidate_thresholds
 
+	'''Author: Ethan Padden'''
 	def _split_data_according_to_attribute(self, data, attr_index, threshold=None):
 		# Create LHS and RHS of dataset
 		left_child = []
@@ -247,7 +254,7 @@ class Classifier:
 
 		return np.array(left_child), np.array(right_child)
 
-
+	'''Author: Ethan Padden'''
 	def _get_corresponding_labels(self, dataset, labels_whole_dataset):
 		labels_dataset = []
 		for row in dataset:
@@ -256,6 +263,7 @@ class Classifier:
 
 		return labels_dataset
 
+	'''Author: Ethan Padden'''
 	def _get_best_threshold(self, data, attr_index, labels):
 		candidate_thresholds = self._get_candidate_thresholds(data, labels, attr_index)
 		info_gain_ratios = []
@@ -269,6 +277,7 @@ class Classifier:
 		else:
 			return -1, 0
 
+	'''Author: Ethan Padden'''
 	def _calculate_info_gain(self, whole_dataset, attr_index, labels, threshold):
 		datasets = self._split_data_according_to_attribute(whole_dataset, attr_index, threshold)
 
