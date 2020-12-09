@@ -92,11 +92,9 @@ class Classifier:
 	def __init__(self):
 		self.tree_root = None
 		self.already_chosen_attributes = np.empty([0], dtype=int)
-		self.total_tree_count = 0 # ??????????
 
 	def fit(self, X, y):
 		self._build_tree(X, y)
-		print("TREE NODES:", self.total_tree_count)
 		self.traverseTree()
 
 	def predict(self, X):
@@ -146,8 +144,6 @@ class Classifier:
 						self.already_chosen_attributes = np.append(self.already_chosen_attributes, i)
 
 			if best_gain != 0:  # if 0 we must have split on all the attributes; no more info_gain to be gotten
-				self.total_tree_count += 1
-
 				leftChild, rightChild = self._split_data_according_to_attribute(data_copy, a_best, threshold=threshold)
 
 				tree.attribute = a_best
@@ -198,7 +194,7 @@ class Classifier:
 		if len(labels) < 1: # TODO: may not be needed
 			return 0
 
-		labels = np.delete(labels, np.where(labels == ""))
+		labels = np.delete(labels, np.where(labels == "")) # remove blank entries
 
 		labels_unique = np.unique(labels.astype('str'), axis=0)
 
@@ -259,17 +255,6 @@ class Classifier:
 
 		return np.array(left_child), np.array(right_child)
 
-	def _get_label(self, index, labels):
-		# find index on column 0
-		# find match on column 1
-		# retunr column 1 entry
-
-		col0 = labels[:,0]
-		ind = str(index)
-
-		row = np.where(col0 == ind)
-
-		return labels[row[0], 1] # nope, not row, ectract info
 
 	def _get_corresponding_labels(self, dataset, labels_whole_dataset):
 		labels_dataset = []
