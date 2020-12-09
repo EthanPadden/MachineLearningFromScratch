@@ -249,14 +249,14 @@ class Classifier:
 
 	def _get_best_threshold(self, data, attr_index, labels):
 		candidate_thresholds = self._get_candidate_thresholds(data, labels, attr_index)
-		info_gains = []
+		info_gain_ratios = []
 		for threshold in candidate_thresholds:
 			info_gain, info_gain_ratio = self._calculate_info_gain(data, attr_index, labels, threshold)
-			info_gains.append(info_gain)
-		if len(info_gains) > 0:
-			max_info_gain = max(float(sub) for sub in info_gains)
-			corresponding_index = info_gains.index(max_info_gain)
-			return candidate_thresholds[corresponding_index], max_info_gain
+			info_gain_ratios.append(info_gain_ratio)
+		if len(info_gain_ratios) > 0:
+			max_info_gain_ratio = max(float(sub) for sub in info_gain_ratios)
+			corresponding_index = info_gain_ratios.index(max_info_gain_ratio)
+			return candidate_thresholds[corresponding_index], max_info_gain_ratio
 		else:
 			return -1, 0
 
