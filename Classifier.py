@@ -134,7 +134,8 @@ class Classifier:
 			threshold = None
 
 			for i in range(data_copy.shape[1]):
-				if i != 6 and np.where(self.already_chosen_attributes == i)[0].size == 0:  # if this attribute has NOT already been chosen
+				# if this attribute is not an ID and has not already been chosen
+				if i != 6 and np.where(self.already_chosen_attributes == i)[0].size == 0:
 					threshold, info_gain = self._get_best_threshold(data_copy, i, labels)  # TODO: why is info gain 1.251192 for a row of identical values?! should it not be 0?
 					if info_gain > best_gain:  # and i is not in already_chosen_attributes
 						best_gain = info_gain
@@ -297,7 +298,7 @@ class Classifier:
 
 
 if __name__ == '__main__':
-	number_of_runs = 3
+	number_of_runs = 10
 	total_accuracy = 0
 
 	for i in range(number_of_runs):
