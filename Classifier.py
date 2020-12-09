@@ -257,7 +257,7 @@ class Classifier:
 		info_gains = []
 		for threshold in candidate_thresholds:
 			info_gain, info_gain_ratio = self._calculate_info_gain(data, attr_index, labels, threshold)
-			info_gains.append(info_gain)
+			info_gains.append(info_gain_ratio)#info_gain)
 		if len(info_gains) > 0:
 			max_info_gain = max(float(sub) for sub in info_gains)
 			corresponding_index = info_gains.index(max_info_gain)
